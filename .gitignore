@@ -3,3 +3,7 @@
 /t/test-results
 /t/trash directory*
 /__pycache__/
+*.so
+/build
+/dist
+*.egg-info

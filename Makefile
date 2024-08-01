@@ -10,6 +10,10 @@ pythondir = $(prefix)/lib64/python3.6/site-packages
 
 default: build
 
+
+cythonize: git_filter_repo.cpp
+	python setup.py build_ext --inplace
+
 build:
 	@echo Nothing to do: filter-repo is a script which needs no compilation.
 
