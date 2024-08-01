@@ -34,7 +34,7 @@ Source = "https://github.com/newren/git-filter-repo"
 git-filter-repo = "git_filter_repo:main"
 
 [build-system]
-requires = ["setuptools>=61", "setuptools_scm>=8.0", "wheel"]
+requires = ["setuptools>=61", "setuptools_scm>=8.0", "wheel", "cython~=3.0.10"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
@@ -42,3 +42,6 @@ py-modules = ["git_filter_repo"]
 
 [tool.setuptools_scm]
 # This section intentionally left blank
+
+[tool.cythonize]
+files = ["git_filter_repo.pyx"]
