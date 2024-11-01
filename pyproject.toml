@@ -1,10 +1,15 @@
 [project]
 name = "git-filter-repo"
+dynamic = ["version","urls"]
 description = "Quickly rewrite git repository history"
 authors = [
-    {name = "Elijah Newren", email = "newren@gmail.com"}
+    {name = "Elijah Newren", email = "newren@gmail.com"},
+    {name = "Peter A.", email = "ink.splatters@pm.me"}
 ]
-readme = "README.md"
+dependencies = []
+license.text = "MIT"
+requires-python = ">= 3.6"
+
 classifiers = [
     "Development Status :: 4 - Beta",
     "Operating System :: OS Independent",
@@ -21,24 +26,62 @@ classifiers = [
     "Programming Language :: Python :: Implementation :: CPython",
     "Programming Language :: Python :: Implementation :: PyPy",
 ]
-license.text = "MIT"
-requires-python = ">= 3.6"
-dynamic = ["version"]
-
-[project.urls]
-Homepage = "https://github.com/newren/git-filter-repo"
-Issues = "https://github.com/newren/git-filter-repo/issues/"
-Source = "https://github.com/newren/git-filter-repo"
 
 [project.scripts]
 git-filter-repo = "git_filter_repo:main"
 
 [build-system]
-requires = ["setuptools>=61", "setuptools_scm>=8.0", "wheel"]
-build-backend = "setuptools.build_meta"
+requires = [
+    "hatchling",
+    "hatch-vcs",
+    "hatch-mypyc>=0.16.0",
+]
 
-[tool.setuptools]
-py-modules = ["git_filter_repo"]
+build-backend = "hatchling.build"
 
-[tool.setuptools_scm]
-# This section intentionally left blank
+[tool.hatch]
+packages = []
+
+[tool.hatch.build]
+packages = []
+only-packages = false
+artifacts = ["git_filter_repo.py"]
+
+[tool.hatch.build.targets.wheel]
+include = ["git_filter_repo.py"]
+packages = []
+
+[tool.hatch.build.targets.wheel.hooks.mypyc]
+dependencies = ["mypy>=1.13.0"]
+enable = true
+module-patterns = ["git_filter_repo"]
+
+[tool.hatch.build.hooks.custom]
+path = "build_hooks.py"
+
+[tool.hatch.build.hooks.vcs]
+version-file = "_version.py"
+
+[tool.hatch.metadata]
+allow-direct-references = true
+
+[tool.hatch.metadata.hooks.vcs.urls]
+Homepage = "https://github.com/ink-splatters/git-filter-repo"
+Issues = "https://github.com/ink-splatters/git-filter-repo/issues/"
+source_archive = "https://github.com/ink-splatters/git-filter-repo/archive/{commit_hash}.zip"
+
+[tool.hatch.version]
+source = "vcs"
+
+[tool.rye]
+managed = true
+dev-dependencies = [
+    "hatch>=1.13.0",
+    "hatch-vcs>=0.4.0",
+    "hatch-mypyc>=0.16.0",
+]
+
+[tool.pytype]
+python_version = "3.6"
+disable = ["pyi-error"]
+
