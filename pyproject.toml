@@ -1,6 +1,6 @@
 [project]
 name = "git-filter-repo"
-dynamic = ["version","urls"]
+dynamic = ["version", "urls"]
 description = "Quickly rewrite git repository history"
 authors = [
     {name = "Elijah Newren", email = "newren@gmail.com"},
@@ -8,7 +8,7 @@ authors = [
 ]
 dependencies = []
 license.text = "MIT"
-requires-python = ">= 3.6"
+requires-python = ">=3.6"
 
 classifiers = [
     "Development Status :: 4 - Beta",
@@ -51,13 +51,10 @@ artifacts = ["git_filter_repo.py"]
 include = ["git_filter_repo.py"]
 packages = []
 
-[tool.hatch.build.targets.wheel.hooks.mypyc]
-dependencies = ["mypy>=1.13.0"]
-enable = true
+# [tool.hatch.build.targets.wheel.hooks.mypyc]
+# dependencies = ["mypy>=1.13.0"]
+# enable = true
 module-patterns = ["git_filter_repo"]
-
-[tool.hatch.build.hooks.custom]
-path = "build_hooks.py"
 
 [tool.hatch.build.hooks.vcs]
 version-file = "_version.py"
@@ -79,9 +76,6 @@ dev-dependencies = [
     "hatch>=1.13.0",
     "hatch-vcs>=0.4.0",
     "hatch-mypyc>=0.16.0",
+    "mypy>=1.13.0",
+    "ruff>=0.7.2",
 ]
-
-[tool.pytype]
-python_version = "3.6"
-disable = ["pyi-error"]
-

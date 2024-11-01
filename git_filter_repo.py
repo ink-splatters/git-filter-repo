@@ -46,6 +46,7 @@ import textwrap
 
 from datetime import tzinfo, timedelta, datetime
 
+
 __all__ = ["Blob", "Reset", "FileChange", "Commit", "Tag", "Progress",
            "Checkpoint", "FastExportParser", "ProgressWriter",
            "string_to_date", "date_to_string",
@@ -84,8 +85,8 @@ def setup_gettext():
   #locale.bindtextdomain(TEXTDOMAIN, podir);
   ## but the python docs suggest using the gettext module (which doesn't
   ## have setlocale()) instead, so:
-  gettext.textdomain(TEXTDOMAIN);
-  gettext.bindtextdomain(TEXTDOMAIN, podir);
+  gettext.textdomain(TEXTDOMAIN)
+  gettext.bindtextdomain(TEXTDOMAIN, podir)
 
 def _timedelta_to_seconds(delta):
   """
@@ -171,7 +172,8 @@ class PathQuoting:
   _unescape_re = re.compile(br'\\([a-z"\\]|[0-9]{3})')
   _escape = [bytes([x]) for x in range(127)]+[
              b'\\'+bytes(ord(c) for c in oct(x)[2:]) for x in range(127,256)]
-  _reverse = dict(map(reversed, _unescape.items()))
+  
+  _reverse: dict[bytes,bytes] = dict(map(reversed, _unescape.items()))
   for x in _reverse:
     _escape[ord(x)] = b'\\'+_reverse[x]
   _special_chars = [len(x) > 1 for x in _escape]
@@ -433,6 +435,7 @@ class ProgressWriter(object):
       self.show(self._last_message)
     sys.stdout.write("\n")
 
+_ID = int
 class _IDs(object):
   """
   A class that maintains the 'name domain' of all the 'marks' (short int
@@ -461,13 +464,13 @@ class _IDs(object):
     Init
     """
     # The id for the next created blob/commit object
-    self._next_id = 1
+    self._next_id: _ID = 1
 
     # A map of old-ids to new-ids (1:1 map)
-    self._translation = {}
+    self._translation: dict[_ID, _ID] = {}
 
     # A map of new-ids to every old-id that points to the new-id (1:N map)
-    self._reverse_translation = {}
+    self._reverse_translation: dict[_ID, _ID] = {}
 
   def has_renames(self):
     """
@@ -475,7 +478,7 @@ class _IDs(object):
     """
     return bool(self._translation)
 
-  def new(self):
+  def new(self) -> _ID:
     """
     Should be called whenever a new blob or commit object is created. The
     returned value should be used as the id/mark for that object.
@@ -484,7 +487,7 @@ class _IDs(object):
     self._next_id += 1
     return rv
 
-  def record_rename(self, old_id, new_id, handle_transitivity = False):
+  def record_rename(self, old_id: _ID, new_id: _ID, handle_transitivity = False):
     """
     Record that old_id is being renamed to new_id.
     """
@@ -505,7 +508,7 @@ class _IDs(object):
         self._reverse_translation[new_id] = []
       self._reverse_translation[new_id].append(old_id)
 
-  def translate(self, old_id):
+  def translate(self, old_id: _ID) -> _ID:
     """
     If old_id has been mapped to an alternate id, return the alternate id.
     """
@@ -616,7 +619,7 @@ class Blob(_GitElementWithId):
     self.original_id = original_id
 
     # Stores the blob's data
-    assert(type(data) == bytes)
+    assert(type(data) is bytes)
     self.data = data
 
   def dump(self, file_):
@@ -676,7 +679,7 @@ class FileChange(_GitElement):
 
     # Denote the type of file-change (b'M' for modify, b'D' for delete, etc)
     # We could
-    #   assert(type(type_) == bytes)
+    #   assert(type(type_) is bytes)
     # here but I don't just due to worries about performance overhead...
     self.type = type_
 
@@ -712,7 +715,8 @@ class FileChange(_GitElement):
     Write this file-change element to a file
     """
     skipped_blob = (self.type == b'M' and self.blob_id is None)
-    if skipped_blob: return
+    if skipped_blob:
+      return
     self.dumped = 1
 
     quoted_filename = PathQuoting.enquote(self.filename)
@@ -1203,7 +1207,7 @@ class FastExportParser(object):
 
     original_id = None
     if self._currentline.startswith(b'original-oid'):
-      original_id = self._parse_original_id();
+      original_id = self._parse_original_id()
 
     data = self._parse_data()
     if self._currentline == b'\n':
@@ -1282,7 +1286,7 @@ class FastExportParser(object):
 
     original_id = None
     if self._currentline.startswith(b'original-oid'):
-      original_id = self._parse_original_id();
+      original_id = self._parse_original_id()
 
     author_name = None
     author_email = None
@@ -1331,7 +1335,7 @@ class FastExportParser(object):
     file_change = self._parse_optional_filechange()
     had_file_changes = file_change is not None
     while file_change:
-      if not (type(file_change) == bytes and file_change == b'skipped'):
+      if not (type(file_change) is bytes and file_change == b'skipped'):
         file_changes.append(file_change)
       file_change = self._parse_optional_filechange()
     if self._currentline == b'\n':
@@ -1357,7 +1361,7 @@ class FastExportParser(object):
 
     # Now print the resulting commit, or if prunable skip it
     self._latest_orig_commit[branch] = commit.id
-    if not (commit.old_id or commit.id) in _SKIPPED_COMMITS:
+    if (commit.old_id or commit.id) not in _SKIPPED_COMMITS:
       self._latest_commit[branch] = commit.id
     if not commit.dumped:
       self._imported_refs.add(commit.branch)
@@ -1379,7 +1383,7 @@ class FastExportParser(object):
 
     original_id = None
     if self._currentline.startswith(b'original-oid'):
-      original_id = self._parse_original_id();
+      original_id = self._parse_original_id()
 
     tagger_name, tagger_email, tagger_date = None, None, None
     if self._currentline.startswith(b'tagger'):
@@ -1481,7 +1485,7 @@ class FastExportParser(object):
   def insert(self, obj):
     assert not obj.dumped
     obj.dump(self._output)
-    if type(obj) == Commit:
+    if type(obj) is Commit:
       self._imported_refs.add(obj.branch)
     elif type(obj) in (Reset, Tag):
       self._imported_refs.add(obj.ref)
@@ -1547,11 +1551,11 @@ BLOB_HASH_TO_NEW_ID = {}
 class SubprocessWrapper(object):
   @staticmethod
   def decodify(args):
-    if type(args) == str:
+    if type(args) is str:
       return args
     else:
-      assert type(args) == list
-      return [decode(x) if type(x)==bytes else x for x in args]
+      assert type(args) is list
+      return [decode(x) if type(x) is bytes else x for x in args]
 
   @staticmethod
   def call(*args, **kwargs):
@@ -2175,7 +2179,7 @@ EXAMPLES
       raise SystemExit(_("Error: --analyze is incompatible with --stdin."))
     # If no path_changes are found, initialize with empty list but mark as
     # not inclusive so that all files match
-    if args.path_changes == None:
+    if args.path_changes is None:
       args.path_changes = []
       args.inclusive = False
     else:
@@ -2520,7 +2524,7 @@ class RepoAnalyze(object):
       # to avoid dying on commits with parents that we haven't seen before
       if args.refs:
         graph.record_external_commits([p for p in parents
-                                       if not p in graph.value])
+                                       if p not in graph.value])
 
       # Analyze this commit and update progress
       RepoAnalyze.analyze_commit(stats, graph, commit, parents, date,
@@ -3240,7 +3244,7 @@ class RepoFilter(object):
     # Parse through self._pending_renames until we have read enough.  We have
     # read enough if:
     #   self._pending_renames is empty
-    #   old_hash != None and we found a rename for old_hash
+    #   old_hash is not None and we found a rename for old_hash
     #   limit > 0 and len(self._pending_renames) started less than 2*limit
     #   limit > 0 and len(self._pending_renames) < limit
     if limit and len(self._pending_renames) < 2 * limit:
@@ -3504,7 +3508,7 @@ class RepoFilter(object):
 
     if ( self._args.replace_text
         # not (if blob contains zero byte in the first 8Kb, that is, if blob is binary data)
-        and not b"\0" in blob.data[0:8192]
+        and b"\0" not in blob.data[0:8192]
     ):
       for literal, replacement in self._args.replace_text['literals']:
         blob.data = blob.data.replace(literal, replacement)
@@ -3861,7 +3865,7 @@ class RepoFilter(object):
              '%s:%s' % (full_branch, decode(marks_basename))]
       try:
         contents = subproc.check_output(cmd)
-      except subprocess.CalledProcessError as e: # pragma: no cover
+      except subprocess.CalledProcessError: # pragma: no cover
         raise SystemExit(_("Failed loading %s from %s") %
                          (decode(marks_basename), full_branch))
     if contents:
@@ -4249,8 +4253,9 @@ class RepoFilter(object):
     #
     # We are excluding here any commits deleted in previous git-filter-repo
     # runs
-    undo_old_commit_renames = dict((v,k) for (k,v) in old_commit_renames.items()
-                                   if v != deleted_hash)
+    # TODO: unused code
+    # undo_old_commit_renames = dict((v,k) for (k,v) in old_commit_renames.items()
+    #                                if v != deleted_hash)
     # Get a list of all commits that were changed, as of the beginning of
     # this latest run.
     changed_commits = {new
@@ -4259,9 +4264,10 @@ class RepoFilter(object):
                       {old
                        for (old,new) in self._commit_renames.items()
                        if old != new}
-    special_changed_commits = {old
-                               for (old,new) in old_commit_renames.items()
-                               if new == deleted_hash}
+    # TODO: unused code
+    # special_changed_commits = {old
+    #                            for (old,new) in old_commit_renames.items()
+    #                            if new == deleted_hash}
     first_changes = dict()
     for (old,new) in self._commit_renames.items():
       if old == new:
@@ -4334,7 +4340,7 @@ class RepoFilter(object):
     with open(os.path.join(metadata_dir, b'commit-map'), 'bw') as f:
       f.write(("%-40s %s\n" % (_("old"), _("new"))).encode())
       for (old,new) in sorted(commit_renames.items()):
-        msg = b'%s %s\n' % (old, new if new != None else deleted_hash)
+        msg = b'%s %s\n' % (old, new if new is not None else deleted_hash)
         f.write(msg)
 
     with open(os.path.join(metadata_dir, b'ref-map'), 'bw') as f:
@@ -4391,15 +4397,15 @@ class RepoFilter(object):
 
   def insert(self, obj, direct_insertion = False):
     if not direct_insertion:
-      if type(obj) == Blob:
+      if type(obj) is Blob:
         self._tweak_blob(obj)
-      elif type(obj) == Commit:
+      elif type(obj) is Commit:
         aux_info = {'orig_parents': obj.parents,
                     'had_file_changes': bool(obj.file_changes)}
         self._tweak_commit(obj, aux_info)
-      elif type(obj) == Reset:
+      elif type(obj) is Reset:
         self._tweak_reset(obj)
-      elif type(obj) == Tag:
+      elif type(obj) is Tag:
         self._tweak_tag(obj)
     self._insert_into_stream(obj)
 
