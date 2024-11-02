@@ -46,6 +46,8 @@ import textwrap
 
 from datetime import tzinfo, timedelta, datetime
 
+import typing as _T
+
 
 __all__ = ["Blob", "Reset", "FileChange", "Commit", "Tag", "Progress",
            "Checkpoint", "FastExportParser", "ProgressWriter",
@@ -172,8 +174,9 @@ class PathQuoting:
   _unescape_re = re.compile(br'\\([a-z"\\]|[0-9]{3})')
   _escape = [bytes([x]) for x in range(127)]+[
              b'\\'+bytes(ord(c) for c in oct(x)[2:]) for x in range(127,256)]
-  
-  _reverse: dict[bytes,bytes] = dict(map(reversed, _unescape.items()))
+
+  #_reverse: dict[bytes, bytes] = dict(map(_T.cast(_T.Callable[[tuple[bytes, bytes]], tuple[bytes, bytes]], reversed), _unescape.items()))
+   _reverse = dict(map(reversed, _unescape.items()))
   for x in _reverse:
     _escape[ord(x)] = b'\\'+_reverse[x]
   _special_chars = [len(x) > 1 for x in _escape]
@@ -470,7 +473,7 @@ class _IDs(object):
     self._translation: dict[_ID, _ID] = {}
 
     # A map of new-ids to every old-id that points to the new-id (1:N map)
-    self._reverse_translation: dict[_ID, _ID] = {}
+    self._reverse_translation: dict[_ID, list[_ID]] = {}
 
   def has_renames(self):
     """
