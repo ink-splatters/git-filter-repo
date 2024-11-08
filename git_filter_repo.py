@@ -175,8 +175,7 @@ class PathQuoting:
   _escape = [bytes([x]) for x in range(127)]+[
              b'\\'+bytes(ord(c) for c in oct(x)[2:]) for x in range(127,256)]
 
-  #_reverse: dict[bytes, bytes] = dict(map(_T.cast(_T.Callable[[tuple[bytes, bytes]], tuple[bytes, bytes]], reversed), _unescape.items()))
-   _reverse = dict(map(reversed, _unescape.items()))
+  _reverse = dict(map(reversed, _unescape.items()))
   for x in _reverse:
     _escape[ord(x)] = b'\\'+_reverse[x]
   _special_chars = [len(x) > 1 for x in _escape]
